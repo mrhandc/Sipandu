@@ -53,43 +53,6 @@ Website aplikasi pelayanan administrasi surat keterangan desa digital yang dikem
 9. **Konfigurasi Dinamis (SYSTEM_CONFIG §5.3, §13.2, §18)**
    - Admin dapat mengatur batas revisi, threshold pengingat SLA (T1/T2/T3), nama desa, kepala desa, dsb. secara langsung melalui UI tanpa perlu redeploy kode.
 
-10. **Notifikasi WhatsApp Real-Time via Fonnte (§13, §18)**
-    - Seluruh role (Warga, RT/RW, Sekdes, Kades, Admin) menerima notifikasi WhatsApp otomatis pada setiap peristiwa penting:
-      - Warga: aktivasi akun, pengajuan diterima, permintaan revisi, pengajuan dibatalkan, persetujuan/penolakan di setiap tahap, penerbitan surat resmi (beserta nomor surat).
-      - Petugas (RT/RW, Sekdes, Kades): pemberitahuan ada pengajuan baru yang perlu ditangani.
-      - Admin Desa: eskalasi T3 SLA otomatis via management command.
-    - **Simulation Mode**: Jika token Fonnte belum dikonfigurasi, sistem mencatat `WHATSAPP_SIMULATED` di Audit Log tanpa error — aman untuk development.
-    - Token dapat diatur dari UI SYSTEM_CONFIG tanpa redeploy. Pengujian live tersedia di menu **Kelola Admin → WhatsApp Gateway (Fonnte)**.
-
-### Cakupan Notifikasi WhatsApp
-
-Gateway Fonnte diimplementasikan pada `apps/core/services/whatsapp.py`. Pengiriman menggunakan nomor `no_hp` pengguna yang dinormalisasi ke format internasional Indonesia (`628...`). Kegagalan gateway dicatat pada `AuditLog` dan tidak membatalkan proses pengajuan atau approval utama.
-
-| Peristiwa | Penerima |
-|---|---|
-| Pendaftaran warga baru | Admin Desa |
-| Akun disetujui atau ditolak | Warga |
-| Pengajuan surat baru | Warga, RT/RW sesuai wilayah, Admin Desa |
-| Persetujuan RT/RW | Warga, Sekretaris Desa, Admin Desa |
-| Persetujuan Sekdes | Warga, Kepala Desa, Admin Desa |
-| Revisi, penolakan, atau pembatalan | Warga dan Admin Desa; petugas tahap terkait menerima pengajuan revisi |
-| Persetujuan akhir dan penerbitan PDF/QR | Warga, Admin Desa, Sekdes, dan RT/RW wilayah pemohon |
-| Verifikasi terwakilkan Mode B | Warga, Admin Desa, dan Sekretaris Desa bila diteruskan |
-| Pengingat SLA dan eskalasi timeout | Petugas pada tahap terkait dan Admin Desa |
-
-### Konfigurasi Fonnte
-
-1. Buat atau aktifkan perangkat WhatsApp pada [Fonnte](https://fonnte.com) dan salin token API.
-2. Simpan token pada `.env` lokal (file ini tidak boleh di-push):
-   ```env
-   FONNTE_ENABLED=True
-   FONNTE_TOKEN=token_fonnte_anda
-   ```
-3. Jalankan `python seed_data.py` pada instalasi baru, atau isi `FONNTE_ENABLED` dan `FONNTE_TOKEN` melalui menu **Kelola Admin → SYSTEM_CONFIG**.
-4. Uji pengiriman melalui menu **Kelola Admin → WhatsApp Gateway (Fonnte)**.
-
-Jika token belum tersedia, aplikasi berjalan dalam Simulation Mode dan menulis aksi `WHATSAPP_SIMULATED` ke audit log. Pastikan setiap akun penerima memiliki nomor WhatsApp pada field `no_hp`.
-
 ---
 
 ## 🛠️ Tech Stack
@@ -98,61 +61,8 @@ Jika token belum tersedia, aplikasi berjalan dalam Simulation Mode dan menulis a
 - **Database**: SQLite (default zero-config out of the box) / MySQL support (via PyMySQL)
 - **PDF Generation**: ReportLab
 - **QR Code**: qrcode + Pillow
-- **WhatsApp Gateway**: [Fonnte.com](https://fonnte.com) API (notifikasi real-time ke semua role)
 - **Frontend**: Django Template + Bootstrap 5 + Bootstrap Icons (Mobile-friendly & responsif)
-
-## 🧩 Template Dasar Antarmuka
-
-Seluruh halaman aplikasi menggunakan [`templates/base.html`](templates/base.html) sebagai template induk Django. Halaman lain dapat mewarisinya dengan `{% extends "base.html" %}` dan mengisi blok yang tersedia:
-
-| Blok | Fungsi |
-|---|---|
-| `title` | Mengubah judul halaman pada tab browser. Nilai default: `SIPANDU - Pelayanan Administrasi Desa Digital`. |
-| `extra_css` | Menambahkan CSS khusus pada halaman turunan setelah stylesheet global. |
-| `content` | Menempatkan isi utama halaman di dalam container Bootstrap. |
-| `extra_js` | Menambahkan JavaScript khusus setelah Bootstrap JS Bundle. |
-
-### Komponen Layout
-
-- **Navbar responsif** dengan branding SIPANDU, nama desa, tombol menu mobile, dan navigasi berdasarkan status login serta role pengguna.
-- **Menu warga** untuk dashboard, daftar pengajuan, dan surat yang telah diterbitkan.
-- **Menu petugas** untuk antrian verifikasi bagi RT/RW, Sekdes, Kades, dan Admin Desa.
-- **Menu laporan** untuk Sekdes, Kades, dan Admin Desa.
-- **Dropdown Kelola Admin** khusus Admin Desa yang berisi verifikasi KTP/wajah, pengelolaan surat, konfigurasi sistem, pengujian WhatsApp Fonnte, audit trail, dan Django Admin.
-- **Notifikasi** dengan badge jumlah notifikasi yang belum dibaca melalui `unread_notifications_count`.
-- **Dropdown profil pengguna** yang menampilkan nama, email, role, status akun warga, tautan status akun/KTP, dan logout.
-- **Flash message** Django (`messages`) dengan ikon berbeda untuk pesan `success`, `error`, `warning`, dan informasi.
-- **Area konten utama** yang disediakan melalui `{% block content %}`.
-- **Footer** yang menampilkan nama desa, kecamatan, tahun, dan deskripsi sistem.
-
-### Konteks Template yang Dibutuhkan
-
-Template mengandalkan objek dan variabel berikut dari Django context processor atau view:
-
-| Variabel / objek | Kegunaan |
-|---|---|
-| `user` | Menentukan status autentikasi, role, identitas, email, dan status akun. |
-| `SYSTEM_NAMA_DESA` | Menampilkan nama desa pada navbar dan footer. |
-| `SYSTEM_KECAMATAN` | Menampilkan nama kecamatan pada footer. |
-| `unread_notifications_count` | Menampilkan badge jumlah notifikasi yang belum dibaca. |
-| `messages` | Menampilkan pesan umpan balik dari Django messages framework. |
-
-Role pengguna dibaca melalui properti `user.is_warga`, `user.is_rt_rw`, `user.is_sekdes`, `user.is_kades`, dan `user.is_admin_desa`. Nama URL menggunakan namespace `core`, `accounts`, `pengajuan`, `surat`, dan `approval`, sehingga URL pattern terkait harus tetap terdaftar pada konfigurasi Django.
-
-### Dependensi Frontend dari CDN
-
-`base.html` memuat dependensi berikut secara langsung dari CDN:
-
-- Bootstrap `5.3.3` untuk grid, navbar, dropdown, alert, tombol, dan komponen responsif.
-- Bootstrap Icons `1.11.3` untuk ikon navigasi dan status.
-- Google Fonts **Plus Jakarta Sans** dengan bobot 400, 500, 600, 700, dan 800.
-- Bootstrap JS Bundle `5.3.3` untuk navbar mobile, dropdown, alert dismiss, dan interaksi komponen.
-
-Koneksi internet diperlukan ketika halaman pertama kali mengambil aset tersebut dari CDN. Untuk deployment tanpa akses CDN, aset sebaiknya disalin ke direktori `static/` dan diubah menjadi aset statis lokal.
-
-### Gaya Visual Global
-
-Template menetapkan warna utama biru `#1e40af`, warna hover `#1d4ed8`, serta navy `#0f172a` untuk navbar. Konten menggunakan latar `#f8fafc`, kartu dengan sudut membulat dan bayangan ringan, tombol utama biru, serta footer putih yang tetap berada di bagian bawah halaman.
+- **Notifikasi WhatsApp**: Fonnte.com API Gateway (`requests` library)
 
 ---
 
@@ -225,3 +135,50 @@ Untuk mensimulasikan reminder dan eskalasi otomatis tugas tertahan:
 ```powershell
 python manage.py check_timeout_escalation
 ```
+
+---
+
+## 📱 Notifikasi WhatsApp via Fonnte
+
+SIPANDU mengintegrasikan gateway WhatsApp **[Fonnte.com](https://fonnte.com)** untuk mengirimkan notifikasi otomatis ke seluruh role (Admin, Kepala Desa, Sekdes, RT/RW, Warga).
+
+### Event yang Memicu Notifikasi WhatsApp
+
+| Event | Penerima Notifikasi |
+|---|---|
+| Pengajuan surat baru oleh Warga | Warga (konfirmasi) + RT/RW wilayah |
+| Verifikasi akun AKTIF/DITOLAK | Warga ybs |
+| Setiap keputusan approval (Setuju/Tolak/Revisi) | Warga + Admin + Petugas jenjang berikutnya |
+| Surat resmi diterbitkan oleh Kepala Desa | Warga + Admin + Sekdes + RT/RW wilayah |
+| Warga membatalkan pengajuan | Warga + Admin |
+| Permintaan revisi berkas | Warga + Petugas pemroses |
+| Verifikasi Mode B oleh Admin | Warga + Sekdes |
+| Reminder SLA (T1/T2) | Petugas yang menangani |
+| Eskalasi Timeout (T3) | Admin Desa |
+
+### Cara Konfigurasi Token Fonnte
+
+#### 1. Dapatkan Token Fonnte
+1. Daftar / Login ke [fonnte.com](https://fonnte.com)
+2. Sambungkan perangkat WhatsApp Anda (scan QR Code)
+3. Salin **Token** yang tersedia di dashboard Fonnte
+
+#### 2. Set Token via SIPANDU Admin Panel
+Login sebagai Admin → **Kelola Admin** → **WhatsApp Gateway (Fonnte)** → masukkan token dan klik **Simpan Token**.
+
+Atau langsung via Django Admin (`/admin/`) → **System Configs** → cari key `FONNTE_TOKEN` → edit value.
+
+#### 3. Konfigurasi via `.env` (Opsional)
+```env
+FONNTE_ENABLED=True
+FONNTE_TOKEN=token_fonnte_anda_disini
+```
+
+#### 4. Test Pengiriman
+Di halaman **WhatsApp Gateway (Fonnte)**, masukkan nomor tujuan (format `08xxx`) dan pesan, lalu klik **Kirim Tes**.
+
+### Catatan Teknis
+- **Mode Simulasi**: Jika token belum diset, sistem **tidak error** — pesan WA dicatat di AuditLog sebagai `WHATSAPP_SIMULATED` dan alur bisnis berjalan normal.
+- **Normalisasi Nomor**: Sistem otomatis mengkonversi `08xxx → 628xxx` sesuai format internasional Fonnte.
+- **Audit Trail**: Setiap pengiriman WA (sukses/gagal/simulasi) dicatat lengkap di AuditLog dengan target dan response API.
+- **Nomor HP Akun Demo**: Sudah diisi nomor dummy untuk setiap akun demo (`admin: 081200000001`, `kades: 081200000002`, `sekdes: 081200000003`, `rt01: 081234567891`, `warga_budi: 081234567890`).
