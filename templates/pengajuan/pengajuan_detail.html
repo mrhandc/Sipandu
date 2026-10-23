@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Detail Pengajuan #{{ pengajuan.id }} - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <a href="{% url 'pengajuan:pengajuan_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Kembali ke Daftar
+    </a>
+    <div class="d-flex gap-2">
+        {% if pengajuan.is_in_revision %}
+            <a href="{% url 'pengajuan:pengajuan_revisi' pengajuan.id %}" class="btn btn-warning btn-sm fw-bold">
+                <i class="bi bi-pencil-square me-1"></i> Lakukan Revisi Berkas Sekarang
+            </a>
+        {% endif %}
+        {% if pengajuan.can_be_cancelled_by_warga %}
+            <a href="{% url 'pengajuan:pengajuan_batal' pengajuan.id %}" class="btn btn-outline-danger btn-sm">
+                <i class="bi bi-x-circle me-1"></i> Batalkan Pengajuan
+            </a>
+        {% endif %}
+        {% if pengajuan.surat_terbit and pengajuan.surat_terbit.file_pdf %}
+            <a href="{% url 'surat:download_pdf' pengajuan.surat_terbit.id %}" class="btn btn-success btn-sm fw-bold">
+                <i class="bi bi-file-earmark-pdf-fill me-1"></i> Unduh Dokumen PDF Resmi
+            </a>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Header Card with Tracking Progress Bar (§22) -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-4">
+        <div class="row align-items-center g-3">
+            <div class="col-md-7">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-secondary">#{{ pengajuan.id }}</span>
+                    <span class="badge bg-primary">{{ pengajuan.jenis_surat.kode }}</span>
+                    <span class="text-muted small">{{ pengajuan.created_at|date:"d F Y, H:i" }} WIB</span>
+                </div>
+                <h4 class="fw-bold mb-1">{{ pengajuan.jenis_surat.nama }}</h4>
+                <p class="text-muted mb-0 small">Pemohon: <strong>{{ pengajuan.warga.get_full_name }}</strong> (NIK: {{ pengajuan.warga.masked_nik }})</p>
+            </div>
+            <div class="col-md-5 text-md-end">
+                <div class="mb-2">
+                    {% if pengajuan.status == 'DITERBITKAN' %}
+                        <span class="badge bg-success fs-6 px-3 py-2"><i class="bi bi-check-circle-fill me-1"></i> {{ pengajuan.get_status_display }}</span>
+                    {% elif pengajuan.status == 'DITOLAK' %}
+                        <span class="badge bg-danger fs-6 px-3 py-2"><i class="bi bi-x-circle-fill me-1"></i> {{ pengajuan.get_status_display }}</span>
+                    {% elif pengajuan.status == 'DIBATALKAN' %}
+                        <span class="badge bg-secondary fs-6 px-3 py-2"><i class="bi bi-dash-circle me-1"></i> {{ pengajuan.get_status_display }}</span>
+                    {% elif pengajuan.is_in_revision %}
+                        <span class="badge bg-warning text-dark fs-6 px-3 py-2"><i class="bi bi-pencil-square me-1"></i> {{ pengajuan.get_status_display }}</span>
+                    {% else %}
+                        <span class="badge bg-primary fs-6 px-3 py-2"><i class="bi bi-clock-history me-1"></i> {{ pengajuan.get_status_display }}</span>
+                    {% endif %}
+                </div>
+                <div class="small text-muted">Tahapan Berjenjang: RT/RW &rarr; Sekdes &rarr; Kades</div>
+            </div>
+        </div>
+
+        <hr class="my-3">
+
+        <!-- Real-time Progress Bar & Stepper -->
+        <div class="mt-2">
+            <div class="d-flex justify-content-between text-muted small fw-semibold mb-1">
+                <span>Progress Pelayanan</span>
+                <span>{{ pengajuan.progress_percentage }}% Selesai</span>
+            </div>
+            <div class="progress" style="height: 10px;">
+                <div class="progress-bar progress-bar-striped progress-bar-animated {% if pengajuan.status == 'DITERBITKAN' %}bg-success{% elif pengajuan.status == 'DITOLAK' %}bg-danger{% elif pengajuan.is_in_revision %}bg-warning{% else %}bg-primary{% endif %}" 
+                     role="progressbar" 
+                     style="width: {{ pengajuan.progress_percentage }}%;">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if pengajuan.is_in_revision %}
+    <div class="alert alert-warning shadow-sm border-warning mb-4">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+            <div>
+                <h6 class="fw-bold text-dark mb-1"><i class="bi bi-exclamation-triangle-fill text-warning me-2"></i> Perlu Perbaikan Berkas/Data</h6>
+                <div class="small text-secondary">
+                    Petugas memberikan catatan: <strong>"{{ pengajuan.catatan_terakhir|default:'Dokumen belum lengkap/tidak jelas' }}"</strong>
+                </div>
+                <div class="small text-muted mt-1">
+                    Histori revisi: <strong>{{ pengajuan.jumlah_revisi }} dari batas maksimal {{ max_revisi }} kali (§13.2)</strong>.
+                    {% if pengajuan.jumlah_revisi >= 2 %}
+                        <span class="text-danger fw-bold">(Peringatan: Jika melewati batas maksimal, sistem akan otomatis menolak permohonan).</span>
+                    {% endif %}
+                </div>
+            </div>
+            <a href="{% url 'pengajuan:pengajuan_revisi' pengajuan.id %}" class="btn btn-warning fw-bold">
+                <i class="bi bi-pencil-square me-1"></i> Kirim Revisi
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    <!-- Informasi & Berkas Lampiran -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-file-text me-2"></i> Rincian Formulir</h6>
+            </div>
+            <div class="card-body p-3">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" style="width: 35%;">Tujuan Keperluan</td>
+                        <td class="fw-semibold">: {{ pengajuan.keperluan }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Wilayah Terdaftar</td>
+                        <td>: {{ pengajuan.wilayah }}</td>
+                    </tr>
+                    {% if pengajuan.data_tambahan %}
+                        {% for k, v in pengajuan.data_tambahan.items %}
+                            <tr>
+                                <td class="text-muted">{{ k|title }}</td>
+                                <td>: <strong>{{ v }}</strong></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-paperclip me-2"></i> Dokumen Lampiran Pemohon</h6>
+            </div>
+            <div class="card-body p-3">
+                <div class="list-group list-group-flush">
+                    {% for doc in dokumen_list %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <div>
+                                <i class="bi bi-file-earmark-arrow-up text-primary me-2 fs-5"></i>
+                                <span class="fw-semibold small">{{ doc.nama_dokumen }}</span>
+                                <small class="text-muted d-block ms-4" style="font-size: 0.72rem;">Diunggah: {{ doc.uploaded_at|date:"d M Y, H:i" }}</small>
+                            </div>
+                            <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i> Buka File
+                            </a>
+                        </div>
+                    {% empty %}
+                        <div class="text-muted small py-2">Tidak ada dokumen lampiran terunggah.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Timeline Audit Trail (§21) -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2"></i> Rekam Jejak Audit (Audit Trail §21)</h6>
+            </div>
+            <div class="card-body p-3">
+                <div class="timeline ps-2">
+                    {% for h in history_list %}
+                        <div class="step-item">
+                            <div class="step-dot"></div>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="fw-bold small text-primary">{{ h.get_action_display }}</span>
+                                <small class="text-muted" style="font-size: 0.7rem;">{{ h.created_at|date:"d/m H:i" }}</small>
+                            </div>
+                            <div class="text-muted small" style="font-size: 0.78rem;">
+                                Oleh: <strong>{{ h.actor.get_full_name|default:h.actor.username }}</strong> ({{ h.actor.get_role_display }})
+                            </div>
+                            {% if h.catatan %}
+                                <div class="bg-light p-2 rounded mt-1 small" style="font-size: 0.75rem;">
+                                    "{{ h.catatan }}"
+                                </div>
+                            {% endif %}
+                            {% if h.lampiran_bukti %}
+                                <div class="mt-1">
+                                    <a href="{{ h.lampiran_bukti.url }}" target="_blank" class="badge bg-info text-dark text-decoration-none">
+                                        <i class="bi bi-paperclip"></i> Bukti Komunikasi Mode B
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="text-muted small mb-0">Belum ada riwayat tercatat.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

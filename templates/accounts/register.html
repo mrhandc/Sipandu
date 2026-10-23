@@ -1,0 +1,119 @@
+{% extends 'base.html' %}
+
+{% block title %}Registrasi Akun Warga - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary-subtle text-primary p-2 rounded-circle">
+                        <i class="bi bi-person-plus-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Pendaftaran Akun Warga</h5>
+                        <small class="text-muted">Lengkapi data diri dan unggah KTP serta foto wajah untuk verifikasi identitas (§10 PRD)</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="alert alert-info d-flex gap-2 mb-4" role="alert">
+                    <i class="bi bi-shield-check fs-4 text-primary"></i>
+                    <div class="small">
+                        <strong>Perlindungan Data Pribadi (§10 & §19):</strong>
+                        Foto KTP dan foto selfie Anda digunakan secara khusus dan aman oleh Admin Desa untuk memastikan akun terhubung ke orang aslinya, serta mencegah akun palsu.
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-1-circle me-1"></i> Data Akun & Login</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Nama Pengguna (Username) <span class="text-danger">*</span></label>
+                            {{ form.username }}
+                            {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Email Aktif</label>
+                            {{ form.email }}
+                            {% if form.email.errors %}<div class="text-danger small mt-1">{{ form.email.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Kata Sandi (Min. 6 Karakter) <span class="text-danger">*</span></label>
+                            {{ form.password }}
+                            {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Konfirmasi Kata Sandi <span class="text-danger">*</span></label>
+                            {{ form.password_confirm }}
+                            {% if form.password_confirm.errors %}<div class="text-danger small mt-1">{{ form.password_confirm.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-2-circle me-1"></i> Data Kependudukan Sesuai KTP</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Nomor Induk Kependudukan (NIK) <span class="text-danger">* (16 Digit)</span></label>
+                            {{ form.nik }}
+                            {% if form.nik.errors %}<div class="text-danger small mt-1">{{ form.nik.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Nama Lengkap (Sesuai KTP) <span class="text-danger">*</span></label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}<div class="text-danger small mt-1">{{ form.first_name.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Nomor WhatsApp / HP Aktif <span class="text-danger">* (08...)</span></label>
+                            {{ form.no_hp }}
+                            {% if form.no_hp.errors %}<div class="text-danger small mt-1">{{ form.no_hp.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Wilayah RT / RW Domisili <span class="text-danger">*</span></label>
+                            {{ form.wilayah }}
+                            {% if form.wilayah.errors %}<div class="text-danger small mt-1">{{ form.wilayah.errors.0 }}</div>{% endif %}
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Alamat Lengkap Domisili <span class="text-danger">*</span></label>
+                            {{ form.alamat }}
+                            {% if form.alamat.errors %}<div class="text-danger small mt-1">{{ form.alamat.errors.0 }}</div>{% endif %}
+                        </div>
+                    </div>
+
+                    <h6 class="fw-bold text-primary mb-3"><i class="bi bi-3-circle me-1"></i> Verifikasi Identitas (§10 PRD)</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-light">
+                                <label class="form-label small fw-semibold">Foto KTP Asli <span class="text-danger">*</span></label>
+                                {{ form.foto_ktp }}
+                                <small class="text-muted d-block mt-1">Pastikan seluruh sudut KTP terlihat jelas & tidak silau (Maks 2MB).</small>
+                                {% if form.foto_ktp.errors %}<div class="text-danger small mt-1">{{ form.foto_ktp.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-3 border rounded bg-light">
+                                <label class="form-label small fw-semibold">Foto Wajah / Pas Foto (Selfie) <span class="text-danger">*</span></label>
+                                {{ form.foto_wajah }}
+                                <small class="text-muted d-block mt-1">Foto wajah tampak depan jelas tanpa kacamata hitam/masker (Maks 2MB).</small>
+                                {% if form.foto_wajah.errors %}<div class="text-danger small mt-1">{{ form.foto_wajah.errors.0 }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'accounts:login' %}" class="text-decoration-none text-muted small">
+                            <i class="bi bi-arrow-left me-1"></i> Sudah punya akun? Masuk
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold">
+                            <i class="bi bi-cloud-arrow-up me-1"></i> Kirim Pendaftaran
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

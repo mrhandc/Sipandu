@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block title %}Status Akun - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <h5 class="fw-bold mb-0"><i class="bi bi-person-vcard text-primary me-2"></i> Status Verifikasi Akun</h5>
+                {% if user.status_akun == 'AKTIF' %}
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2">
+                        <i class="bi bi-check-circle-fill me-1"></i> AKTIF (Terverifikasi)
+                    </span>
+                {% elif user.status_akun == 'PENDING_VERIFIKASI' %}
+                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle px-3 py-2">
+                        <i class="bi bi-hourglass-split me-1"></i> Menunggu Verifikasi Admin
+                    </span>
+                {% elif user.status_akun == 'DITOLAK' %}
+                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2">
+                        <i class="bi bi-x-circle-fill me-1"></i> Verifikasi Ditolak
+                    </span>
+                {% else %}
+                    <span class="badge bg-secondary px-3 py-2">Nonaktif</span>
+                {% endif %}
+            </div>
+
+            <div class="card-body p-4">
+                {% if user.status_akun == 'PENDING_VERIFIKASI' %}
+                    <div class="text-center py-3">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-warning-subtle text-warning-emphasis rounded-circle mb-3" style="width: 64px; height: 64px;">
+                            <i class="bi bi-hourglass-top fs-2"></i>
+                        </div>
+                        <h5 class="fw-bold">Sedang Ditinjau oleh Admin Desa</h5>
+                        <p class="text-muted small mx-auto" style="max-width: 480px;">
+                            Data diri dan dokumen KTP serta foto wajah Anda saat ini sedang diverifikasi secara manual oleh petugas Admin Desa.
+                            Anda akan dapat mengajukan surat setelah verifikasi disetujui (§10.1 PRD).
+                        </p>
+                    </div>
+                {% elif user.status_akun == 'AKTIF' %}
+                    <div class="text-center py-3">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle mb-3" style="width: 64px; height: 64px;">
+                            <i class="bi bi-shield-check fs-2"></i>
+                        </div>
+                        <h5 class="fw-bold">Akun Terverifikasi & Aktif</h5>
+                        <p class="text-muted small mx-auto" style="max-width: 480px;">
+                            Identitas Anda telah berhasil diverifikasi oleh Admin Desa. Anda dapat langsung menggunakan seluruh layanan administrasi surat online.
+                        </p>
+                        <a href="{% url 'pengajuan:pengajuan_create' %}" class="btn btn-primary px-4 py-2 mt-2">
+                            <i class="bi bi-plus-circle me-1"></i> Ajukan Surat Sekarang
+                        </a>
+                    </div>
+                {% elif user.status_akun == 'DITOLAK' %}
+                    <div class="text-center py-3">
+                        <div class="d-inline-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-circle mb-3" style="width: 64px; height: 64px;">
+                            <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+                        </div>
+                        <h5 class="fw-bold text-danger">Verifikasi Identitas Ditolak</h5>
+                        <p class="text-muted small">Admin menemukan ketidaksesuaian pada dokumen atau foto yang diunggah.</p>
+                        <div class="alert alert-danger text-start mt-3 mb-0">
+                            <strong>Alasan Penolakan:</strong><br>
+                            {{ user.catatan_penolakan|default:"Foto KTP atau wajah tidak jelas/tidak cocok dengan data form." }}
+                        </div>
+                    </div>
+                {% endif %}
+
+                <hr class="my-4">
+
+                <h6 class="fw-bold mb-3">Informasi Akun Terdaftar:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="text-muted" style="width: 35%;">Nama Lengkap</td>
+                            <td class="fw-semibold">: {{ user.get_full_name|default:user.username }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">NIK</td>
+                            <td class="fw-semibold">: {{ user.nik }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Wilayah RT/RW</td>
+                            <td>: {{ user.wilayah|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Alamat Domisili</td>
+                            <td>: {{ user.alamat|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">No. Telepon / WA</td>
+                            <td>: {{ user.no_hp|default:"-" }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                {% if verifikasi %}
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6 class="fw-bold small text-secondary mb-2"><i class="bi bi-paperclip me-1"></i> Berkas Verifikasi Diunggah:</h6>
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Foto KTP:</small>
+                                <a href="{{ verifikasi.foto_ktp.url }}" target="_blank" class="btn btn-outline-secondary btn-sm w-100 text-truncate">
+                                    <i class="bi bi-image me-1"></i> Buka Foto KTP
+                                </a>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Foto Wajah (Selfie):</small>
+                                <a href="{{ verifikasi.foto_wajah.url }}" target="_blank" class="btn btn-outline-secondary btn-sm w-100 text-truncate">
+                                    <i class="bi bi-camera me-1"></i> Buka Foto Wajah
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

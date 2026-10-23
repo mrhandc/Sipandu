@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}Verifikasi Mode B Terwakilkan - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 border-top border-4 border-warning">
+            <div class="card-header bg-white py-3 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-warning-subtle text-warning-emphasis p-2 rounded-circle">
+                        <i class="bi bi-shield-shaded fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Verifikasi Mode B (Terwakilkan RT/RW oleh Admin)</h5>
+                        <small class="text-muted">Klausul Akuntabilitas Sistem Berdasarkan PRD SIPANDU §17</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <div class="alert alert-warning d-flex gap-2 mb-4" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+                    <div class="small">
+                        <strong>Poin Akuntabilitas (§17):</strong>
+                        Keputusan substantif tetap milik Ketua RT/RW terkait meski tombol ditekan oleh Admin Desa.
+                        <strong>Setiap verifikasi Mode B wajib melampirkan bukti komunikasi</strong> (foto/screenshot chat, catatan telepon, atau scan form bertanda tangan basah).
+                        Sistem tidak akan menyimpan verifikasi Mode B tanpa lampiran bukti ini.
+                    </div>
+                </div>
+
+                <div class="p-3 bg-light rounded mb-4">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tr>
+                            <td class="text-muted" style="width: 35%;">ID Pengajuan</td>
+                            <td class="fw-bold">: #{{ pengajuan.id }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Jenis Surat</td>
+                            <td>: {{ pengajuan.jenis_surat.nama }} ({{ pengajuan.jenis_surat.kode }})</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Pemohon (Warga)</td>
+                            <td>: <strong>{{ pengajuan.warga.get_full_name }}</strong> (NIK: {{ pengajuan.warga.masked_nik }})</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Wilayah RT / RW</td>
+                            <td>: <span class="badge bg-secondary">{{ pengajuan.wilayah }}</span></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Keperluan</td>
+                            <td>: {{ pengajuan.keperluan }}</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Hasil Keputusan Konfirmasi RT/RW <span class="text-danger">*</span></label>
+                        {% for radio in form.keputusan %}
+                            <div class="form-check p-2 border rounded mb-2">
+                                {{ radio.tag }}
+                                <label class="form-check-label fw-semibold small" for="{{ radio.id_for_label }}">
+                                    {{ radio.choice_label }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                        {% if form.keputusan.errors %}<div class="text-danger small">{{ form.keputusan.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Catatan Hasil Komunikasi / Konfirmasi Offline <span class="text-danger">*</span></label>
+                        {{ form.catatan }}
+                        <small class="text-muted d-block mt-1">Uraikan nama pengurus RT/RW yang dihubungi dan inti persetujuan atau catatan mereka.</small>
+                        {% if form.catatan.errors %}<div class="text-danger small">{{ form.catatan.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4 p-3 border rounded bg-light">
+                        <label class="form-label small fw-bold text-danger">Lampiran Bukti Komunikasi Wajib (§17) <span class="text-danger">*</span></label>
+                        {{ form.lampiran_bukti }}
+                        <small class="text-muted d-block mt-1">Unggah tangkapan layar WhatsApp, foto formulir manual, atau bukti komunikasi sah lainnya (Maks 2MB).</small>
+                        {% if form.lampiran_bukti.errors %}<div class="text-danger small">{{ form.lampiran_bukti.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'approval:queue' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-warning px-4 py-2 fw-bold text-dark">
+                            <i class="bi bi-shield-check me-1"></i> Simpan Verifikasi Mode B
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block title %}Kelola Surat & Pengecualian - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Pengelolaan Surat Terbit & Pengecualian</h4>
+        <p class="text-muted small mb-0">Kelola status surat dan jalur pengecualian masa berlaku surat warga (§15.4 PRD)</p>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-award me-1"></i> Seluruh Surat Terbit</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">Nomor Surat</th>
+                        <th>Warga Pemohon</th>
+                        <th>Jenis Surat</th>
+                        <th>Tgl Terbit</th>
+                        <th>Kadaluarsa</th>
+                        <th>Status Surat (§15.3)</th>
+                        <th class="text-end pe-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for s in surat_list %}
+                        <tr>
+                            <td class="ps-3">
+                                <code>{{ s.nomor_surat }}</code>
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ s.warga.get_full_name|default:s.warga.username }}</div>
+                                <code class="small">{{ s.warga.masked_nik }}</code>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ s.jenis_surat.nama }}</span></td>
+                            <td class="small text-muted">{{ s.tanggal_terbit|date:"d M Y" }}</td>
+                            <td class="small fw-semibold">{{ s.tanggal_kadaluarsa|date:"d M Y" }}</td>
+                            <td>
+                                {% if s.status_surat == 'AKTIF' %}
+                                    <span class="badge bg-success-subtle text-success border border-success-subtle">AKTIF</span>
+                                {% elif s.status_surat == 'KEDALUWARSA' %}
+                                    <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">KEDALUWARSA</span>
+                                {% else %}
+                                    <span class="badge bg-danger-subtle text-danger border border-danger-subtle">DIBATALKAN</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group btn-group-sm">
+                                    {% if s.file_pdf %}
+                                        <a href="{% url 'surat:download_pdf' s.id %}" class="btn btn-outline-primary" title="Unduh PDF">
+                                            <i class="bi bi-download"></i>
+                                        </a>
+                                    {% endif %}
+                                    <a href="{% url 'surat:verifikasi_publik' s.kode_verifikasi %}" target="_blank" class="btn btn-outline-secondary" title="Cek Publik">
+                                        <i class="bi bi-qr-code"></i>
+                                    </a>
+                                    {% if s.status_surat == 'AKTIF' %}
+                                        <a href="{% url 'surat:admin_batalkan_surat' s.id %}" class="btn btn-outline-danger" title="Jalur Pengecualian: Batalkan Surat (§15.4)">
+                                            <i class="bi bi-x-octagon"></i> Batalkan
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">Belum ada surat yang diterbitkan.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

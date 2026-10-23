@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Surat Keterangan Diterbitkan - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Surat Keterangan Resmi Saya</h4>
+        <p class="text-muted small mb-0">Daftar surat keterangan desa yang telah selesai diterbitkan dengan QR code verifikasi (§14 & §15)</p>
+    </div>
+</div>
+
+<div class="row g-3">
+    {% for s in surat_list %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 h-100 {% if s.status_surat == 'AKTIF' %}border-top border-4 border-success{% elif s.status_surat == 'KEDALUWARSA' %}border-top border-4 border-warning{% else %}border-top border-4 border-danger{% endif %}">
+                <div class="card-body p-4 d-flex flex-column">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <span class="badge bg-primary">{{ s.jenis_surat.kode }}</span>
+                        {% if s.status_surat == 'AKTIF' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle-fill me-1"></i> Aktif Berlaku
+                            </span>
+                        {% elif s.status_surat == 'KEDALUWARSA' %}
+                            <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                <i class="bi bi-clock-history me-1"></i> Kedaluwarsa
+                            </span>
+                        {% else %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                <i class="bi bi-x-circle-fill me-1"></i> Dibatalkan
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="fw-bold mb-1">{{ s.jenis_surat.nama }}</h5>
+                    <div class="small text-muted mb-3">No: <code>{{ s.nomor_surat }}</code></div>
+
+                    <div class="p-3 bg-light rounded small mb-3">
+                        <div class="d-flex justify-content-between mb-1">
+                            <span class="text-muted">Tanggal Terbit:</span>
+                            <span class="fw-semibold">{{ s.tanggal_terbit|date:"d M Y" }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Berlaku Sampai:</span>
+                            <span class="fw-bold {% if s.is_currently_valid %}text-success{% else %}text-danger{% endif %}">
+                                {{ s.tanggal_kadaluarsa|date:"d M Y" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="mt-auto d-flex gap-2">
+                        {% if s.file_pdf %}
+                            <a href="{% url 'surat:download_pdf' s.id %}" class="btn btn-primary btn-sm flex-grow-1">
+                                <i class="bi bi-download me-1"></i> Unduh PDF
+                            </a>
+                        {% endif %}
+                        <a href="{% url 'surat:verifikasi_publik' s.kode_verifikasi %}" target="_blank" class="btn btn-outline-secondary btn-sm" title="Periksa Keaslian QR">
+                            <i class="bi bi-qr-code-scan"></i> Cek QR
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-file-earmark-check fs-1 text-muted d-block mb-2"></i>
+            <h5 class="text-muted">Belum ada surat yang diterbitkan untuk akun Anda.</h5>
+            <p class="text-muted small">Surat yang telah disetujui Kepala Desa akan muncul di halaman ini.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

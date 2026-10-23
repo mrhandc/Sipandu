@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block title %}Konfirmasi Pembatalan Pengajuan - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 border-top border-4 border-danger">
+            <div class="card-body p-4 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-circle mb-3" style="width: 60px; height: 60px;">
+                    <i class="bi bi-trash3-fill fs-2"></i>
+                </div>
+                <h5 class="fw-bold text-danger mb-2">Batalkan Permohonan Surat?</h5>
+                <p class="text-muted small">
+                    Anda akan membatalkan pengajuan <strong>{{ pengajuan.jenis_surat.nama }} (#{{ pengajuan.id }})</strong>.
+                    Tindakan ini bersifat final dan tidak dapat diubah kembali (§16 PRD).
+                </p>
+
+                <form method="post" class="text-start mt-3">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Alasan Pembatalan <span class="text-danger">*</span></label>
+                        <textarea name="alasan_batal" class="form-control" rows="3" placeholder="Sebutkan alasan Anda membatalkan permohonan ini" required></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between gap-2 pt-2">
+                        <a href="{% url 'pengajuan:pengajuan_detail' pengajuan.id %}" class="btn btn-outline-secondary w-50">
+                            Tidak, Kembali
+                        </a>
+                        <button type="submit" class="btn btn-danger w-50 fw-semibold">
+                            Ya, Batalkan Pengajuan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

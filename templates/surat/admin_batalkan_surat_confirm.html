@@ -1,0 +1,49 @@
+{% extends 'base.html' %}
+
+{% block title %}Pengecualian Pembatalan Surat - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-6">
+        <div class="card shadow-sm border-0 border-top border-4 border-danger">
+            <div class="card-body p-4">
+                <div class="text-center mb-3">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-circle mb-2" style="width: 56px; height: 56px;">
+                        <i class="bi bi-exclamation-triangle-fill fs-2"></i>
+                    </div>
+                    <h5 class="fw-bold text-danger mb-1">Batalkan Surat (Jalur Pengecualian)</h5>
+                    <p class="text-muted small">Kewenangan Khusus Admin Desa Berdasarkan PRD SIPANDU §15.4</p>
+                </div>
+
+                <div class="alert alert-info small mb-3">
+                    Membatalkan status surat aktif akan membuka kembali izin bagi warga <strong>{{ surat.warga.get_full_name }}</strong> untuk mengajukan permohonan surat sejenis yang baru (misalnya akibat surat sebelumnya hilang, rusak, atau terdapat kebutuhan darurat baru).
+                </div>
+
+                <div class="p-3 bg-light rounded mb-3 small">
+                    <div>Nomor Surat: <strong>{{ surat.nomor_surat }}</strong></div>
+                    <div>Jenis Surat: {{ surat.jenis_surat.nama }}</div>
+                    <div>Masa Berlaku Awal: {{ surat.tanggal_terbit|date:"d M Y" }} s.d. {{ surat.tanggal_kadaluarsa|date:"d M Y" }}</div>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Alasan Pembatalan Surat <span class="text-danger">*</span></label>
+                        <textarea name="alasan_pembatalan" class="form-control" rows="3" placeholder="Contoh: Pemohon melampirkan surat keterangan hilang dari kepolisian / terdapat revisi data substantif usaha." required></textarea>
+                        <small class="text-muted d-block mt-1">Alasan ini wajib diisi dan akan dicatat secara permanen di AUDIT_LOG (§15.4).</small>
+                    </div>
+
+                    <div class="d-flex justify-content-between gap-2 pt-2">
+                        <a href="{% url 'surat:admin_daftar_surat' %}" class="btn btn-outline-secondary w-50">
+                            Kembali
+                        </a>
+                        <button type="submit" class="btn btn-danger w-50 fw-semibold">
+                            Batalkan Surat
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

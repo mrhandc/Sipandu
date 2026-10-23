@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}Masuk - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary text-white rounded-circle mb-3" style="width: 56px; height: 56px;">
+                        <i class="bi bi-shield-lock-fill fs-3"></i>
+                    </div>
+                    <h4 class="fw-bold mb-1">Masuk SIPANDU</h4>
+                    <p class="text-muted small">Sistem Pelayanan Administrasi Surat Keterangan Desa</p>
+                </div>
+
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold">Nama Pengguna (Username)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
+                            <input type="text" name="username" class="form-control" placeholder="Masukkan username" required autofocus id="id_username">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold">Kata Sandi (Password)</label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-key"></i></span>
+                            <input type="password" name="password" class="form-control" placeholder="Masukkan kata sandi" required id="id_password">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Masuk Sekarang
+                    </button>
+                </form>
+
+                <div class="text-center mt-4 pt-3 border-top">
+                    <p class="text-muted small mb-0">Belum memiliki akun warga? 
+                        <a href="{% url 'accounts:register' %}" class="fw-semibold text-decoration-none">Daftar Akun Warga</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Demo Switcher Card for Evaluator / Testing -->
+        <div class="card mt-4 border-info bg-info-subtle">
+            <div class="card-body p-3">
+                <h6 class="fw-bold text-info-emphasis mb-2"><i class="bi bi-info-circle me-1"></i> Akun Uji Coba Multi-Role (PRD §25):</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless mb-0 text-secondary" style="font-size: 0.78rem;">
+                        <thead>
+                            <tr class="text-dark">
+                                <th>Role</th>
+                                <th>Username</th>
+                                <th>Password</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td><strong>Admin Desa</strong></td><td><code>admin</code></td><td><code>admin123</code></td></tr>
+                            <tr><td><strong>Kepala Desa</strong></td><td><code>kades</code></td><td><code>kades123</code></td></tr>
+                            <tr><td><strong>Sekretaris Desa</strong></td><td><code>sekdes</code></td><td><code>sekdes123</code></td></tr>
+                            <tr><td><strong>Ketua RT/RW</strong></td><td><code>rt01</code></td><td><code>rt123</code></td></tr>
+                            <tr><td><strong>Warga (Aktif)</strong></td><td><code>warga_budi</code></td><td><code>warga123</code></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

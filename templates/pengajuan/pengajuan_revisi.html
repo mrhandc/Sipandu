@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Perbaikan Pengajuan #{{ pengajuan.id }} - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-warning-subtle text-warning-emphasis p-2 rounded-circle">
+                        <i class="bi bi-pencil-square fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Perbaikan Berkas / Data Permohonan (Revisi)</h5>
+                        <small class="text-muted">Pengajuan #{{ pengajuan.id }} - {{ pengajuan.jenis_surat.nama }}</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Banner Catatan Petugas & Batas Revisi (§13.2) -->
+                <div class="alert alert-warning mb-4">
+                    <h6 class="fw-bold text-dark mb-1"><i class="bi bi-chat-quote-fill me-1"></i> Catatan Perbaikan dari Petugas:</h6>
+                    <p class="mb-2 fs-6 fw-semibold text-dark">"{{ pengajuan.catatan_terakhir|default:'Mohon perbaiki dokumen sesuai ketentuan' }}"</p>
+                    <hr class="my-2">
+                    <div class="small text-secondary">
+                        <strong>Aturan Batas Revisi (§13.2):</strong> Ini adalah pengajuan revisi ke-<strong>{{ pengajuan.jumlah_revisi|add:1 }}</strong> dari batas maksimal <strong>{{ max_revisi }} kali</strong>.
+                        {% if sisa_revisi <= 1 %}
+                            <span class="text-danger fw-bold d-block mt-1"><i class="bi bi-exclamation-triangle-fill"></i> Peringatan: Ini adalah kesempatan perbaikan terakhir Anda sebelum pengajuan ditolak secara otomatis oleh sistem.</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Uraian / Penjelasan Keperluan yang Telah Disesuaikan <span class="text-danger">*</span></label>
+                        {{ form.keperluan }}
+                        {% if form.keperluan.errors %}<div class="text-danger small">{{ form.keperluan.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4 p-3 border rounded bg-light">
+                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-upload me-1"></i> Unggah Ulang Dokumen Pengganti / Tambahan</h6>
+                        <p class="text-muted small mb-3">Jika petugas meminta upload ulang KTP, KK, atau berkas pendukung lain, pilih file di bawah ini:</p>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Unggah Dokumen Perbaikan 1</label>
+                            <input type="file" name="dokumen_perbaikan_1" class="form-control" accept=".pdf,image/*">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">Unggah Dokumen Perbaikan 2 (Opsional)</label>
+                            <input type="file" name="dokumen_perbaikan_2" class="form-control" accept=".pdf,image/*">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'pengajuan:pengajuan_detail' pengajuan.id %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-warning px-4 py-2 fw-bold">
+                            <i class="bi bi-send-check me-1"></i> Kirimkan Hasil Revisi
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

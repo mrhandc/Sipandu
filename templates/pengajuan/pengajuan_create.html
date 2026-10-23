@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+{% block title %}Ajukan Surat Baru - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary-subtle text-primary p-2 rounded-circle">
+                        <i class="bi bi-file-earmark-plus-fill fs-5"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Permohonan Surat Keterangan Baru</h5>
+                        <small class="text-muted">Isi formulir dan unggah dokumen pendukung yang dipersyaratkan</small>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-4">
+                <form method="post" enctype="multipart/form-data" id="pengajuanForm">
+                    {% csrf_token %}
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                            {{ form.non_field_errors.0 }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Pilihan Jenis Surat -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Jenis Surat Keterangan <span class="text-danger">*</span></label>
+                        {{ form.jenis_surat }}
+                        <small class="text-muted d-block mt-1">Pilih jenis surat yang ingin diajukan. Sistem akan memvalidasi masa berlaku surat sejenis (§15.2).</small>
+                        {% if form.jenis_surat.errors %}<div class="text-danger small">{{ form.jenis_surat.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <!-- Keperluan -->
+                    <div class="mb-4">
+                        <label class="form-label fw-bold">Tujuan / Keperluan Permohonan <span class="text-danger">*</span></label>
+                        {{ form.keperluan }}
+                        <small class="text-muted d-block mt-1">Contoh: "Persyaratan beasiswa kuliah", "Pengajuan KUR BRI", "Persyaratan mutasi kerja", dsb.</small>
+                        {% if form.keperluan.errors %}<div class="text-danger small">{{ form.keperluan.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <!-- Kolom Tambahan Khusus SKU -->
+                    <div id="section-sku" class="p-3 border rounded bg-light mb-4" style="display: none;">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-shop me-1"></i> Data Usaha (Khusus SKU)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Nama Usaha / Toko</label>
+                                {{ form.nama_usaha }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Bidang / Jenis Usaha</label>
+                                {{ form.jenis_usaha }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Kolom Tambahan Khusus SKTM -->
+                    <div id="section-sktm" class="p-3 border rounded bg-light mb-4" style="display: none;">
+                        <h6 class="fw-bold text-primary mb-3"><i class="bi bi-people me-1"></i> Data Ekonomi Keluarga (Khusus SKTM)</h6>
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Estimasi Penghasilan Bulanan</label>
+                                {{ form.penghasilan_bulanan }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label small fw-semibold">Jumlah Anggota Keluarga Tanggungan</label>
+                                {{ form.tanggungan }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Upload Dokumen Lampiran Sesuai Persyaratan (§5.1, §24) -->
+                    <div class="mb-4">
+                        <h6 class="fw-bold text-primary mb-2"><i class="bi bi-paperclip me-1"></i> Unggah Dokumen Lampiran Pendukung (§5.1)</h6>
+                        <p class="text-muted small mb-3">Format file yang didukung: PDF, JPG, PNG (Maks. 2MB per file).</p>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">1. Kartu Tanda Penduduk (KTP) Pemohon <span class="text-danger">*</span></label>
+                            <input type="file" name="dokumen_ktp" class="form-control" accept=".pdf,image/*" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">2. Kartu Keluarga (KK) <span class="text-danger">*</span></label>
+                            <input type="file" name="dokumen_kartu_keluarga" class="form-control" accept=".pdf,image/*" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label small fw-semibold">3. Surat Pengantar / Bukti RT/RW (Jika Ada)</label>
+                            <input type="file" name="dokumen_pengantar_rt" class="form-control" accept=".pdf,image/*">
+                            <small class="text-muted">Dapat diunggah jika RT/RW memberikan rekomendasi tertulis.</small>
+                        </div>
+
+                        <div class="mb-3" id="doc-usaha-box" style="display: none;">
+                            <label class="form-label small fw-semibold">4. Foto Tempat Usaha / Produk (Khusus SKU)</label>
+                            <input type="file" name="dokumen_foto_usaha" class="form-control" accept="image/*">
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center pt-3 border-top">
+                        <a href="{% url 'pengajuan:pengajuan_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Batal
+                        </a>
+                        <button type="submit" class="btn btn-primary px-4 py-2 fw-semibold">
+                            <i class="bi bi-send-check me-1"></i> Kirim Permohonan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const selectSurat = document.getElementById('select-jenis-surat');
+    const secSku = document.getElementById('section-sku');
+    const secSktm = document.getElementById('section-sktm');
+    const docUsaha = document.getElementById('doc-usaha-box');
+
+    function toggleExtraFields() {
+        const text = selectSurat.options[selectSurat.selectedIndex].text.toUpperCase();
+        if (text.includes('USAHA') || text.includes('SKU')) {
+            secSku.style.display = 'block';
+            docUsaha.style.display = 'block';
+            secSktm.style.display = 'none';
+        } else if (text.includes('TIDAK MAMPU') || text.includes('SKTM')) {
+            secSktm.style.display = 'block';
+            secSku.style.display = 'none';
+            docUsaha.style.display = 'none';
+        } else {
+            secSku.style.display = 'none';
+            secSktm.style.display = 'none';
+            docUsaha.style.display = 'none';
+        }
+    }
+
+    if (selectSurat) {
+        selectSurat.addEventListener('change', toggleExtraFields);
+        toggleExtraFields();
+    }
+</script>
+{% endblock %}

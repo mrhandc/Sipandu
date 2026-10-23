@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Uji Coba WhatsApp Gateway Fonnte - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 border-top border-4 border-success mb-4">
+            <div class="card-header bg-white py-3 border-bottom d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-success-subtle text-success p-2 rounded-circle">
+                        <i class="bi bi-whatsapp fs-4"></i>
+                    </div>
+                    <div>
+                        <h5 class="fw-bold mb-0">Integrasi WhatsApp Gateway (Fonnte.com)</h5>
+                        <small class="text-muted">Notifikasi otomatis ke WhatsApp warga, RT/RW, Sekdes, Kades, dan Admin</small>
+                    </div>
+                </div>
+                <span class="badge {% if is_enabled %}bg-success{% else %}bg-secondary{% endif %} px-3 py-2">
+                    {% if is_enabled %}Gateway Aktif{% else %}Gateway Nonaktif{% endif %}
+                </span>
+            </div>
+
+            <div class="card-body p-4">
+                <!-- Status Koneksi & Konfigurasi -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-light">
+                            <small class="text-muted d-block mb-1">Status Token Fonnte:</small>
+                            {% if has_token %}
+                                <div class="fw-bold text-success d-flex align-items-center gap-1">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                    <code>{{ masked_token }}</code>
+                                </div>
+                            {% else %}
+                                <div class="fw-bold text-danger d-flex align-items-center gap-1">
+                                    <i class="bi bi-exclamation-triangle-fill"></i>
+                                    Token Belum Disetel (Simulasi Aktif)
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="p-3 border rounded bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <small class="text-muted d-block">Pengaturan Token:</small>
+                                <span class="small fw-semibold">SYSTEM_CONFIG</span>
+                            </div>
+                            <a href="{% url 'core:system_config' %}" class="btn btn-outline-primary btn-sm">
+                                <i class="bi bi-sliders me-1"></i> Edit Token di Config
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panduan Singkat Fonnte -->
+                <div class="alert alert-info small mb-4">
+                    <h6 class="fw-bold mb-1"><i class="bi bi-info-circle me-1"></i> Cara Mendapatkan Token Fonnte.com:</h6>
+                    <ol class="mb-0 ps-3">
+                        <li>Daftar akun gratis di <a href="https://fonnte.com" target="_blank" class="fw-bold text-primary">fonnte.com</a>.</li>
+                        <li>Buka menu <strong>Device</strong> lalu tautkan nomor WhatsApp dengan memindai QR Code.</li>
+                        <li>Salin <strong>API Token</strong> dan masukkan ke kolom <code>FONNTE_TOKEN</code> di menu <a href="{% url 'core:system_config' %}" class="fw-bold">SYSTEM_CONFIG</a>.</li>
+                    </ol>
+                </div>
+
+                <!-- Form Kirim Pesan Uji Coba -->
+                <h6 class="fw-bold text-success mb-3"><i class="bi bi-send-fill me-1"></i> Kirim Pesan Pengujian WhatsApp</h6>
+                <form method="post">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Nomor WhatsApp Penerima <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <span class="input-group-text bg-light"><i class="bi bi-telephone"></i></span>
+                            <input type="text" name="target_phone" class="form-control" placeholder="Contoh: 081234567890 atau 6281234567890" value="{{ request.user.no_hp }}" required>
+                        </div>
+                        <small class="text-muted">Masukkan nomor WhatsApp aktif Anda untuk menguji penerimaan pesan.</small>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Isi Pesan WhatsApp <span class="text-danger">*</span></label>
+                        <textarea name="test_message" class="form-control font-monospace" rows="4" required>Halo! Ini adalah pesan pengujian notifikasi otomatis WhatsApp dari SIPANDU Desa Sukamaju menggunakan Fonnte.com Gateway.
+
+Sistem pelayanan administrasi desa digital siap melayani warga.</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'core:dashboard' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i> Kembali ke Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-success px-4 py-2 fw-bold">
+                            <i class="bi bi-whatsapp me-1"></i> Kirim Pesan WhatsApp Sekarang
+                        </button>
+                    </div>
+                </form>
+
+                {% if test_result %}
+                    <hr class="my-4">
+                    <h6 class="fw-bold small text-secondary mb-2">Hasil Respon API Gateway Fonnte:</h6>
+                    <div class="p-3 bg-light rounded small font-monospace">
+                        <div><strong>Target:</strong> {{ test_result.target }}</div>
+                        <div><strong>Status:</strong> {% if test_result.success %}<span class="text-success">BERHASIL (200 OK)</span>{% else %}<span class="text-danger">GAGAL / DISIMULASIKAN</span>{% endif %}</div>
+                        <div class="text-muted mt-1"><strong>Detail:</strong> {{ test_result.detail }}</div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

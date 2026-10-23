@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block title %}Pemeriksaan Berkas Verifikasi - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="mb-3">
+    <a href="{% url 'accounts:admin_verifikasi_list' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Kembali ke Antrian
+    </a>
+</div>
+
+<div class="row g-4">
+    <!-- Kolom Dokumen Visual: KTP & Wajah (§10.1) -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-person-bounding-box me-2"></i> Perbandingan Visual KTP & Foto Wajah</h6>
+            </div>
+            <div class="card-body p-3">
+                <div class="row g-3">
+                    <div class="col-md-6 text-center">
+                        <div class="p-2 border rounded bg-light mb-2">
+                            <span class="badge bg-secondary mb-2 d-inline-block">Foto KTP Pemohon</span>
+                            <div class="ratio ratio-4x3 bg-white border rounded overflow-hidden">
+                                <img src="{{ item.foto_ktp.url }}" alt="Foto KTP" class="img-fluid object-fit-contain p-1">
+                            </div>
+                            <div class="mt-2">
+                                <a href="{{ item.foto_ktp.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-arrows-fullscreen me-1"></i> Perbesar KTP
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 text-center">
+                        <div class="p-2 border rounded bg-light mb-2">
+                            <span class="badge bg-secondary mb-2 d-inline-block">Foto Wajah (Selfie)</span>
+                            <div class="ratio ratio-4x3 bg-white border rounded overflow-hidden">
+                                <img src="{{ item.foto_wajah.url }}" alt="Foto Wajah" class="img-fluid object-fit-contain p-1">
+                            </div>
+                            <div class="mt-2">
+                                <a href="{{ item.foto_wajah.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-arrows-fullscreen me-1"></i> Perbesar Foto Wajah
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning small mt-3 mb-0">
+                    <i class="bi bi-lightbulb me-1"></i> <strong>Instruksi Verifikator:</strong>
+                    Pastikan nama dan 16 digit NIK pada foto KTP sesuai dengan data input sistem.
+                    Bandingkan kecocokan wajah pada KTP dengan foto selfie pemohon (§10.1 PRD).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kolom Form Keputusan & Data Pemohon -->
+    <div class="col-lg-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-card-checklist me-2"></i> Data Isian Pemohon</h6>
+            </div>
+            <div class="card-body p-3">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" style="width: 40%;">Username</td>
+                        <td class="fw-bold">: {{ target_user.username }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Nama Lengkap</td>
+                        <td class="fw-bold">: {{ target_user.get_full_name }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">NIK (16 Digit)</td>
+                        <td>: <code class="fs-6">{{ target_user.nik }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">No. WhatsApp</td>
+                        <td>: {{ target_user.no_hp }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Wilayah</td>
+                        <td>: {{ target_user.wilayah }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Alamat Domisili</td>
+                        <td>: {{ target_user.alamat }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Tanggal Daftar</td>
+                        <td>: {{ item.created_at|date:"d F Y, H:i" }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-check-circle me-2"></i> Form Keputusan Admin</h6>
+            </div>
+            <div class="card-body p-4">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold">Keputusan Verifikasi <span class="text-danger">*</span></label>
+                        {% for radio in form.status %}
+                            <div class="form-check mb-2">
+                                {{ radio.tag }}
+                                <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                    {{ radio.choice_label }}
+                                </label>
+                            </div>
+                        {% endfor %}
+                        {% if form.status.errors %}<div class="text-danger small">{{ form.status.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold">Catatan Verifikasi</label>
+                        {{ form.catatan }}
+                        <small class="text-muted d-block mt-1">Wajib diisi jika status DITOLAK (alasan ketidakcocokan data/foto).</small>
+                        {% if form.catatan.errors %}<div class="text-danger small">{{ form.catatan.errors.0 }}</div>{% endif %}
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
+                        <i class="bi bi-save me-1"></i> Simpan Hasil Verifikasi
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

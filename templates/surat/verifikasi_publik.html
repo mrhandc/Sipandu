@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Verifikasi Keaslian Surat Digital - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-4">
+    <div class="col-md-7">
+        <div class="card shadow border-0 overflow-hidden">
+            <!-- Header Status Keaslian -->
+            {% if is_valid %}
+                <div class="bg-success text-white text-center py-4 px-3">
+                    <i class="bi bi-patch-check-fill display-3 d-block mb-2"></i>
+                    <h4 class="fw-bold mb-1">DOKUMEN SURAT RESMI & SAH</h4>
+                    <p class="mb-0 opacity-75 small">Tercatat dalam Sistem Informasi Pelayanan Administrasi Desa (SIPANDU)</p>
+                </div>
+            {% elif surat.status_surat == 'KEDALUWARSA' %}
+                <div class="bg-warning text-dark text-center py-4 px-3">
+                    <i class="bi bi-clock-history display-3 d-block mb-2"></i>
+                    <h4 class="fw-bold mb-1">DOKUMEN TELAH KEDALUWARSA</h4>
+                    <p class="mb-0 small">Surat asli namun masa berlakunya telah berakhir (§15.3)</p>
+                </div>
+            {% else %}
+                <div class="bg-danger text-white text-center py-4 px-3">
+                    <i class="bi bi-x-octagon-fill display-3 d-block mb-2"></i>
+                    <h4 class="fw-bold mb-1">DOKUMEN TELAH DIBATALKAN</h4>
+                    <p class="mb-0 opacity-75 small">Surat ini telah dicabut / dibatalkan oleh Pemerintah Desa (§15.4)</p>
+                </div>
+            {% endif %}
+
+            <div class="card-body p-4 p-md-5">
+                <div class="text-center mb-4 pb-3 border-bottom">
+                    <span class="badge bg-primary px-3 py-1 mb-2">{{ surat.jenis_surat.kode }}</span>
+                    <h4 class="fw-bold text-dark mb-1">{{ surat.jenis_surat.nama }}</h4>
+                    <div class="text-muted">Nomor Surat: <code>{{ surat.nomor_surat }}</code></div>
+                </div>
+
+                <div class="table-responsive mb-4">
+                    <table class="table table-sm table-borderless">
+                        <tr>
+                            <td class="text-muted" style="width: 40%;">Nama Pemohon</td>
+                            <td class="fw-bold">: {{ surat.warga.get_full_name|default:surat.warga.username }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">NIK Pemohon</td>
+                            <td>: <code>{{ surat.warga.masked_nik }}</code></td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Wilayah Pemohon</td>
+                            <td>: {{ surat.warga.wilayah }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Tanggal Diterbitkan</td>
+                            <td>: {{ surat.tanggal_terbit|date:"d F Y" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Masa Berlaku Sampai</td>
+                            <td class="fw-bold {% if is_valid %}text-success{% else %}text-danger{% endif %}">: {{ surat.tanggal_kadaluarsa|date:"d F Y" }}</td>
+                        </tr>
+                        <tr>
+                            <td class="text-muted">Status Dokumen</td>
+                            <td>: 
+                                <span class="badge {% if is_valid %}bg-success{% elif surat.status_surat == 'KEDALUWARSA' %}bg-warning text-dark{% else %}bg-danger{% endif %}">
+                                    {{ surat.get_status_surat_display }}
+                                </span>
+                            </td>
+                        </tr>
+                        {% if surat.status_surat == 'DIBATALKAN' %}
+                            <tr>
+                                <td class="text-danger">Alasan Pembatalan</td>
+                                <td class="text-danger">: {{ surat.catatan_pembatalan }}</td>
+                            </tr>
+                        {% endif %}
+                    </table>
+                </div>
+
+                <div class="p-3 bg-light rounded text-center small text-muted">
+                    <div class="fw-semibold text-dark mb-1">Mekanisme Legalitas Hybrid (§14 PRD):</div>
+                    Pemeriksaan QR Code ini membuktikan keaslian rekaman data surat dalam pangkalan data SIPANDU Pemerintah Desa. Dokumen fisik sah dilengkapi tanda tangan basah dan cap stempel resmi kantor Kepala Desa.
+                </div>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">UUID Dokumen: <code>{{ surat.kode_verifikasi }}</code></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

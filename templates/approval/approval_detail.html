@@ -1,0 +1,190 @@
+{% extends 'base.html' %}
+
+{% block title %}Verifikasi Permohonan #{{ pengajuan.id }} - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="mb-3 d-flex justify-content-between align-items-center">
+    <a href="{% url 'approval:queue' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i> Kembali ke Antrian
+    </a>
+    <span class="badge bg-light text-dark border p-2">
+        Akses Petugas: <strong>{{ user.get_role_display }}</strong>
+    </span>
+</div>
+
+<div class="row g-4">
+    <!-- Kolom Kiri: Rincian Permohonan & Dokumen Lampiran -->
+    <div class="col-lg-7">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-file-earmark-person me-2"></i> Rincian Pemohon & Surat</h6>
+                <span class="badge bg-primary">{{ pengajuan.jenis_surat.kode }}</span>
+            </div>
+            <div class="card-body p-3">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" style="width: 38%;">Jenis Surat</td>
+                        <td class="fw-bold">: {{ pengajuan.jenis_surat.nama }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Nama Pemohon</td>
+                        <td class="fw-bold">: {{ pengajuan.warga.get_full_name|default:pengajuan.warga.username }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">NIK Pemohon</td>
+                        <td>: <code>{{ pengajuan.warga.masked_nik }}</code></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">No. WhatsApp / HP</td>
+                        <td>: {{ pengajuan.warga.no_hp }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Wilayah Domisili</td>
+                        <td>: <span class="badge bg-light text-dark border">{{ pengajuan.wilayah }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Alamat Lengkap</td>
+                        <td>: {{ pengajuan.warga.alamat }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Tujuan Keperluan</td>
+                        <td class="fw-semibold">: {{ pengajuan.keperluan }}</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Status Saat Ini</td>
+                        <td>: <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">{{ pengajuan.get_status_display }}</span></td>
+                    </tr>
+                    {% if pengajuan.data_tambahan %}
+                        {% for k, v in pengajuan.data_tambahan.items %}
+                            <tr>
+                                <td class="text-muted">{{ k|title }}</td>
+                                <td>: <strong>{{ v }}</strong></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-paperclip me-2"></i> Dokumen Lampiran Pemohon</h6>
+            </div>
+            <div class="card-body p-3">
+                <div class="list-group list-group-flush">
+                    {% for doc in dokumen_list %}
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <div>
+                                <i class="bi bi-file-earmark-check text-primary me-2 fs-5"></i>
+                                <span class="fw-semibold small">{{ doc.nama_dokumen }}</span>
+                                <small class="text-muted d-block ms-4" style="font-size: 0.72rem;">Diunggah: {{ doc.uploaded_at|date:"d M Y, H:i" }}</small>
+                            </div>
+                            <a href="{{ doc.file.url }}" target="_blank" class="btn btn-sm btn-outline-secondary">
+                                <i class="bi bi-eye me-1"></i> Buka File
+                            </a>
+                        </div>
+                    {% empty %}
+                        <div class="text-muted small py-2">Tidak ada dokumen lampiran terunggah.</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Timeline Audit Trail (§21) -->
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3">
+                <h6 class="fw-bold mb-0 text-dark"><i class="bi bi-clock-history me-2"></i> Riwayat Verifikasi & Audit Trail (§21)</h6>
+            </div>
+            <div class="card-body p-3">
+                <div class="timeline ps-2">
+                    {% for h in history_list %}
+                        <div class="step-item">
+                            <div class="step-dot"></div>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <span class="fw-bold small text-primary">{{ h.get_action_display }}</span>
+                                <small class="text-muted" style="font-size: 0.7rem;">{{ h.created_at|date:"d/m H:i" }}</small>
+                            </div>
+                            <div class="text-muted small" style="font-size: 0.78rem;">
+                                Oleh: <strong>{{ h.actor.get_full_name|default:h.actor.username }}</strong> ({{ h.actor.get_role_display }})
+                            </div>
+                            {% if h.catatan %}
+                                <div class="bg-light p-2 rounded mt-1 small" style="font-size: 0.75rem;">
+                                    "{{ h.catatan }}"
+                                </div>
+                            {% endif %}
+                            {% if h.lampiran_bukti %}
+                                <div class="mt-1">
+                                    <a href="{{ h.lampiran_bukti.url }}" target="_blank" class="badge bg-info text-dark text-decoration-none">
+                                        <i class="bi bi-paperclip"></i> Bukti Lampiran Mode B (§17)
+                                    </a>
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% empty %}
+                        <p class="text-muted small mb-0">Belum ada riwayat tercatat.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kolom Kanan: Form Keputusan Petugas -->
+    <div class="col-lg-5">
+        {% if can_act %}
+            <div class="card shadow-sm border-0 border-top border-4 border-primary">
+                <div class="card-header bg-white py-3">
+                    <h5 class="fw-bold mb-0 text-primary"><i class="bi bi-pencil-square me-2"></i> Formulir Keputusan Approval</h5>
+                    <small class="text-muted">Kewenangan saat ini: {{ user.get_role_display }}</small>
+                </div>
+                <div class="card-body p-4">
+                    {% if user.is_kades %}
+                        <div class="alert alert-info small mb-3">
+                            <i class="bi bi-info-circle-fill me-1"></i> <strong>Persetujuan Kepala Desa:</strong>
+                            Memilih <em>Setujui Permohonan</em> akan secara otomatis menerbitkan Nomor Surat resmi secara concurrency-safe, menghitung masa berlaku, serta menghasilkan PDF ber-QR Code (§14 & §20).
+                        </div>
+                    {% endif %}
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold">Pilih Keputusan <span class="text-danger">*</span></label>
+                            {% for radio in form.keputusan %}
+                                <div class="form-check p-2 border rounded mb-2 {% if forloop.first %}bg-success-subtle border-success-subtle{% elif forloop.counter == 2 %}bg-warning-subtle border-warning-subtle{% else %}bg-danger-subtle border-danger-subtle{% endif %}">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label fw-semibold small" for="{{ radio.id_for_label }}">
+                                        {{ radio.choice_label }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                            {% if form.keputusan.errors %}<div class="text-danger small">{{ form.keputusan.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label small fw-bold">Catatan Keputusan / Instruksi Revisi</label>
+                            {{ form.catatan }}
+                            <small class="text-muted d-block mt-1">
+                                <strong>Wajib diisi</strong> jika memilih <em>Perlu Revisi</em> (sebutkan berkas yang kurang) atau <em>Tolak</em> (§13.1 PRD).
+                            </small>
+                            {% if form.catatan.errors %}<div class="text-danger small">{{ form.catatan.errors.0 }}</div>{% endif %}
+                        </div>
+
+                        <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                            <i class="bi bi-check2-circle me-1"></i> Simpan & Kirim Keputusan
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="card shadow-sm border-0 bg-light">
+                <div class="card-body p-4 text-center text-muted">
+                    <i class="bi bi-lock fs-2 d-block mb-2"></i>
+                    <h6 class="fw-bold">Tidak Memerlukan Tindakan Anda</h6>
+                    <p class="small mb-0">
+                        Pengajuan ini sedang berada pada tahap <strong>{{ pengajuan.get_status_display }}</strong>, di luar antrian kewenangan Anda saat ini.
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Petugas - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="row align-items-center mb-4">
+    <div class="col-md-8">
+        <h3 class="fw-bold mb-1">Dashboard {{ user.get_role_display }}</h3>
+        <p class="text-muted small mb-0">
+            Selamat bertugas, <strong>{{ user.get_full_name|default:user.username }}</strong>. 
+            {% if wilayah %}Wilayah Kerja: <strong>{{ wilayah }}</strong>{% endif %}
+        </p>
+    </div>
+    <div class="col-md-4 text-md-end mt-2 mt-md-0">
+        <a href="{% url 'approval:queue' %}" class="btn btn-primary px-3 py-2 fw-semibold shadow-sm">
+            <i class="bi bi-inbox-fill me-1"></i> Buka Antrian Verifikasi
+        </a>
+    </div>
+</div>
+
+<!-- Antrian Counter Card -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm border-0 border-start border-4 border-primary">
+            <div class="card-body p-4 d-flex align-items-center justify-content-between">
+                <div>
+                    <span class="text-muted small fw-semibold text-uppercase">Antrian Menunggu Tindakan</span>
+                    <h2 class="fw-bold mb-0 text-primary mt-1">{{ antrian_count }}</h2>
+                    <small class="text-muted">Permohonan perlu diproses</small>
+                </div>
+                <div class="bg-primary-subtle text-primary p-3 rounded-circle">
+                    <i class="bi bi-inbox fs-2"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 col-lg-8">
+        <div class="card shadow-sm border-0 bg-light h-100">
+            <div class="card-body p-3 d-flex align-items-center">
+                <div class="d-flex gap-3">
+                    <i class="bi bi-info-circle-fill text-primary fs-3"></i>
+                    <div class="small">
+                        <strong>Standar SLA Pelayanan Desa (§18 PRD):</strong>
+                        Sistem memantau durasi penanganan permohonan. Jika tertahan lebih dari batas waktu (&ge; 24 jam), sistem akan mengirimkan pengingat, dan &ge; 72 jam akan dieskalasi otomatis ke Admin Desa.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tugas Masuk yang Membutuhkan Tindakan -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-exclamation-circle-fill me-2"></i> Permohonan Surat Menunggu Tindakan Anda</h6>
+        <a href="{% url 'approval:queue' %}" class="small text-decoration-none">Lihat Seluruh Antrian &rarr;</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">ID & Masuk</th>
+                        <th>Pemohon (Warga)</th>
+                        <th>Wilayah</th>
+                        <th>Jenis Surat</th>
+                        <th>Keperluan</th>
+                        <th class="text-end pe-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_tasks %}
+                        <tr>
+                            <td class="ps-3">
+                                <span class="fw-bold">#{{ item.id }}</span>
+                                <small class="text-muted d-block" style="font-size: 0.72rem;">{{ item.updated_at|date:"d M Y, H:i" }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ item.warga.get_full_name|default:item.warga.username }}</div>
+                                <code class="small">{{ item.warga.masked_nik }}</code>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ item.wilayah }}</span></td>
+                            <td>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">{{ item.jenis_surat.kode }}</span>
+                                <div class="small mt-1">{{ item.jenis_surat.nama }}</div>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 250px;">{{ item.keperluan }}</div>
+                            </td>
+                            <td class="text-end pe-3">
+                                <a href="{% url 'approval:detail' item.id %}" class="btn btn-primary btn-sm px-3 fw-semibold">
+                                    <i class="bi bi-pencil-square me-1"></i> Proses
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-5 text-muted">
+                                <i class="bi bi-check2-circle fs-1 text-success d-block mb-2"></i>
+                                Semua permohonan telah selesai ditinjau. Tidak ada antrian tertunda.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

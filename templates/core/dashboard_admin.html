@@ -1,0 +1,153 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard Administrator Desa - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h3 class="fw-bold mb-1">Dashboard Administrator Desa</h3>
+        <p class="text-muted small mb-0">Pusat kendali operasional, verifikasi identitas, konfigurasi sistem, dan akuntabilitas pelayanan desa</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'accounts:admin_verifikasi_list' %}" class="btn btn-warning btn-sm fw-bold">
+            <i class="bi bi-person-check-fill me-1"></i> Verifikasi KTP ({{ pending_verif_akun }})
+        </a>
+        <a href="{% url 'core:system_config' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-sliders me-1"></i> SYSTEM_CONFIG
+        </a>
+    </div>
+</div>
+
+<!-- Key Stat Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100 border-start border-4 border-warning">
+            <div class="card-body p-3">
+                <span class="text-muted small fw-semibold">Verifikasi KTP & Wajah</span>
+                <h3 class="fw-bold mb-0 text-warning-emphasis mt-1">{{ pending_verif_akun }}</h3>
+                <small class="text-muted">Menunggu verifikasi (§10)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100 border-start border-4 border-info">
+            <div class="card-body p-3">
+                <span class="text-muted small fw-semibold">Antrian RT/RW (Mode B)</span>
+                <h3 class="fw-bold mb-0 text-info-emphasis mt-1">{{ mode_b_pending }}</h3>
+                <small class="text-muted">Bisa diwakilkan Admin (§17)</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100 border-start border-4 border-success">
+            <div class="card-body p-3">
+                <span class="text-muted small fw-semibold">Surat Aktif Diterbitkan</span>
+                <h3 class="fw-bold mb-0 text-success mt-1">{{ surat_aktif_count }}</h3>
+                <small class="text-muted">Total terbit: {{ total_surat_terbit }}</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card shadow-sm border-0 h-100 border-start border-4 border-primary">
+            <div class="card-body p-3">
+                <span class="text-muted small fw-semibold">Warga Terdaftar</span>
+                <h3 class="fw-bold mb-0 text-primary mt-1">{{ total_warga }}</h3>
+                <small class="text-muted">Basis data kependudukan</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <!-- Verifikasi KTP Tertunda Widget -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 mb-4 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-warning-emphasis"><i class="bi bi-person-bounding-box me-2"></i> Pendaftaran Warga Menunggu Verifikasi KTP (§10)</h6>
+                <a href="{% url 'accounts:admin_verifikasi_list' %}" class="small text-decoration-none">Kelola Semua &rarr;</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Nama</th>
+                                <th>NIK</th>
+                                <th>Wilayah</th>
+                                <th class="text-end pe-3">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_verifikasi %}
+                                <tr>
+                                    <td class="ps-3 fw-bold">{{ item.user.get_full_name|default:item.user.username }}</td>
+                                    <td><code>{{ item.user.nik }}</code></td>
+                                    <td><span class="badge bg-light text-dark border">{{ item.user.wilayah }}</span></td>
+                                    <td class="text-end pe-3">
+                                        <a href="{% url 'accounts:admin_verifikasi_detail' item.id %}" class="btn btn-primary btn-sm py-1 px-2" style="font-size: 0.75rem;">
+                                            Periksa
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted small">Tidak ada akun warga menunggu verifikasi KTP.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Aktivitas Pelayanan Terkini Widget -->
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 mb-4 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-activity me-2"></i> Pengajuan Pelayanan Terkini</h6>
+                <a href="{% url 'approval:queue' %}" class="small text-decoration-none">Semua Antrian &rarr;</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Pemohon</th>
+                                <th>Surat</th>
+                                <th>Status</th>
+                                <th class="text-end pe-3">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in recent_pengajuan %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <div class="fw-bold small">{{ item.warga.get_full_name|default:item.warga.username }}</div>
+                                        <small class="text-muted" style="font-size: 0.7rem;">{{ item.created_at|date:"d M Y" }}</small>
+                                    </td>
+                                    <td><span class="badge bg-light text-dark border">{{ item.jenis_surat.kode }}</span></td>
+                                    <td>
+                                        <span class="badge {% if item.status == 'DITERBITKAN' %}bg-success-subtle text-success{% elif item.status == 'DITOLAK' %}bg-danger-subtle text-danger{% else %}bg-primary-subtle text-primary{% endif %}" style="font-size: 0.7rem;">
+                                            {{ item.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td class="text-end pe-3">
+                                        <a href="{% url 'approval:detail' item.id %}" class="btn btn-outline-secondary btn-sm py-1 px-2" style="font-size: 0.75rem;">
+                                            Detail
+                                        </a>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-4 text-muted small">Belum ada pengajuan.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

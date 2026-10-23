@@ -1,0 +1,144 @@
+{% extends 'base.html' %}
+
+{% block title %}Antrian Verifikasi Surat - SIPANDU{% endblock %}
+
+{% block content %}
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3 mb-4">
+    <div>
+        <h4 class="fw-bold mb-1">Antrian Verifikasi & Persetujuan</h4>
+        <p class="text-muted small mb-0">
+            Kewenangan Peran: <strong>{{ user.get_role_display }}</strong>
+            {% if user.is_rt_rw %}(Wilayah: {{ user.wilayah }}){% endif %}
+        </p>
+    </div>
+    <span class="badge bg-primary px-3 py-2 fs-6">
+        <i class="bi bi-inbox-fill me-1"></i> {{ antrian.count }} Permohonan Perlu Tindakan
+    </span>
+</div>
+
+<!-- Antrian Aktif -->
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-bold mb-0 text-primary"><i class="bi bi-bell-fill me-1"></i> Menunggu Verifikasi / Persetujuan Anda</h6>
+        <span class="badge bg-light text-secondary border">SLA Timeout T1/T2/T3 (§18)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">ID & Masuk</th>
+                        <th>Pemohon (Warga)</th>
+                        <th>Wilayah</th>
+                        <th>Jenis Surat</th>
+                        <th>Keperluan</th>
+                        <th>Status</th>
+                        <th class="text-end pe-3">Aksi Keputusan</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in antrian %}
+                        <tr>
+                            <td class="ps-3">
+                                <span class="fw-bold text-dark">#{{ item.id }}</span>
+                                <small class="text-muted d-block" style="font-size: 0.72rem;">{{ item.updated_at|date:"d M Y, H:i" }}</small>
+                            </td>
+                            <td>
+                                <div class="fw-bold">{{ item.warga.get_full_name|default:item.warga.username }}</div>
+                                <code class="small">{{ item.warga.masked_nik }}</code>
+                            </td>
+                            <td><span class="badge bg-light text-dark border">{{ item.wilayah }}</span></td>
+                            <td>
+                                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                                    {{ item.jenis_surat.kode }}
+                                </span>
+                                <div class="small fw-semibold mt-1">{{ item.jenis_surat.nama }}</div>
+                            </td>
+                            <td>
+                                <div class="text-truncate" style="max-width: 220px;" title="{{ item.keperluan }}">
+                                    {{ item.keperluan }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge bg-warning-subtle text-warning-emphasis border border-warning-subtle">
+                                    {{ item.get_status_display }}
+                                </span>
+                            </td>
+                            <td class="text-end pe-3">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{% url 'approval:detail' item.id %}" class="btn btn-primary px-3 fw-semibold">
+                                        <i class="bi bi-check2-square me-1"></i> Proses
+                                    </a>
+                                    {% if user.is_admin_desa and item.status == 'MENUNGGU_RT_RW' %}
+                                        <a href="{% url 'approval:mode_b' item.id %}" class="btn btn-outline-warning" title="Verifikasi Mode B (Terwakilkan RT/RW, §17)">
+                                            <i class="bi bi-shield-shaded"></i> Mode B
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center py-5 text-muted">
+                                <i class="bi bi-check-circle fs-1 text-success d-block mb-2"></i>
+                                Tidak ada antrian pengajuan surat yang menunggu tindakan Anda saat ini.
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Riwayat Diproses -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h6 class="fw-bold mb-0 text-secondary"><i class="bi bi-clock-history me-1"></i> Riwayat Pengajuan Terkait Lainnya</h6>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">ID</th>
+                        <th>Pemohon</th>
+                        <th>Jenis Surat</th>
+                        <th>Status Terkini</th>
+                        <th>Waktu Update</th>
+                        <th class="text-end pe-3">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in riwayat %}
+                        <tr>
+                            <td class="ps-3 fw-bold">#{{ item.id }}</td>
+                            <td>{{ item.warga.get_full_name|default:item.warga.username }}</td>
+                            <td>{{ item.jenis_surat.nama }}</td>
+                            <td>
+                                {% if item.status == 'DITERBITKAN' %}
+                                    <span class="badge bg-success-subtle text-success">DITERBITKAN</span>
+                                {% elif item.status == 'DITOLAK' %}
+                                    <span class="badge bg-danger-subtle text-danger">DITOLAK</span>
+                                {% else %}
+                                    <span class="badge bg-light text-dark border">{{ item.get_status_display }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="small text-muted">{{ item.updated_at|date:"d M Y, H:i" }}</td>
+                            <td class="text-end pe-3">
+                                <a href="{% url 'approval:detail' item.id %}" class="btn btn-outline-secondary btn-sm py-0">
+                                    Detail
+                                </a>
+                            </td>
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-3 text-muted">Belum ada riwayat.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
