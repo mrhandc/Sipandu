@@ -1,7 +1,7 @@
 # SIPANDU (Sistem Informasi Pelayanan Administrasi Surat Keterangan Desa)
 ### Berbasis Web dengan Mekanisme Multi-Level Approval
 
-Website aplikasi pelayanan administrasi surat keterangan desa digital yang dikembangkan secara presisi berdasarkan **Dokumen PRD SIPANDU (Politeknik Elektronika Negeri Surabaya - Praktikum Pemrograman Framework)**.
+Website aplikasi pelayanan administrasi surat keterangan desa digital yang dikembangkan berdasarkan **Dokumen PRD SIPANDU (Politeknik Elektronika Negeri Surabaya - Praktikum Pemrograman Framework)**.
 
 ---
 
